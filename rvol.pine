@@ -1,0 +1,22 @@
+//@version=5
+indicator("RVOL", shorttitle="RVOL", overlay=false)
+
+len = input.int(20, "Period")
+thr = input.float(2.0, "Threshold")
+
+useSess = input.bool(true, "Session only")
+sessStr = input.session("1000-1900", "Session")
+sessTz  = input.string("Europe/Moscow", "Timezone")
+
+inSession = not useSess or not na(time(timeframe.period, sessStr, sessTz))
+
+volAvg = ta.sma(volume, len)
+rvol = volAvg > 0 ? volume / volAvg : na
+rvolS = inSession ? rvol : na
+
+plot(rvolS, "RVOL", color=rvolS >= thr ? color.orange : color.gray, style=plot.style_columns)
+hline(1.0, "Average", color=color.gray, linestyle=hline.style_dashed)
+hline(thr, "Threshold", color=color.orange, linestyle=hline.style_dotted)
+bgcolor(rvolS >= thr ? color.new(color.orange, 90) : na)
+
+alertcondition(ta.crossover(rvolS, thr), "RVOL high")
